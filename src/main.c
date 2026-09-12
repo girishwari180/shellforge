@@ -8,25 +8,20 @@ int main(void)
 {
     char *line = NULL;
     size_t len = 0;
-
     char *args[64];
 
     while (1)
     {
-        /* Display prompt */
         printf("shellforge$ ");
         fflush(stdout);
 
-        /* Read user input */
         if (getline(&line, &len, stdin) == -1)
             break;
 
-        /* Remove newline */
         line[strcspn(line, "\n")] = '\0';
 
         int i = 0;
 
-        /* Split input into words */
         char *token = strtok(line, " \t");
 
         while (token != NULL && i < 63)
@@ -35,40 +30,48 @@ int main(void)
             token = strtok(NULL, " \t");
         }
 
-        /* NULL terminate args */
         args[i] = NULL;
 
-        /* Ignore empty input */
         if (i == 0)
             continue;
 
-        /* Exit shell */
         if (strcmp(args[0], "exit") == 0)
             break;
 
-        /* Create child process */
+        /* MILESTONE 5 - Directory Navigation */
+        if (strcmp(args[0], "cd") == 0)
+        {
+            if (args[1] == NULL)
+            {
+                fprintf(stderr, "shellforge: missing path parameter\n");
+            }
+            else
+            {
+                if (chdir(args[1]) != 0)
+                {
+                    perror("Directory change failed");
+                }
+            }
+
+            continue;
+        }
+
+        /* MILESTONE 4 - Execute external commands */
         pid_t pid = fork();
 
         if (pid == 0)
         {
-            /* Child process */
-
             execvp(args[0], args);
 
-            /* Runs only if execvp fails */
-            perror("Command execution error");
+            perror("Execution error");
             exit(1);
         }
         else if (pid > 0)
         {
-            /* Parent process */
-
             waitpid(pid, NULL, 0);
         }
         else
         {
-            /* fork() failed */
-
             perror("Fork creation error");
         }
     }
